@@ -1407,7 +1407,7 @@ void Track::flush()
             (void)mServerProxy->flushBufferIfNeeded();
         }
 
-        if (isOffloaded()) {
+        if (isOffloaded() || playbackThread->type() == IAfThreadBase::OFFLOAD) {
             // If offloaded we allow flush during any state except terminated
             // and keep the track active to avoid problems if user is seeking
             // rapidly and underlying hardware has a significant delay handling
@@ -1459,7 +1459,10 @@ void Track::flush()
 // must be called with thread lock held
 void Track::flushAck()
 {
-    if (!isOffloaded() && !isDirect()) {
+    const sp<IAfThreadBase> thread = mThread.promote();
+    audio_utils::lock_guard _l(thread->mutex());
+    auto* const playbackThread = thread->asIAfPlaybackThread().get();
+    if (!isOffloaded() && !isDirect() && thread != 0 && playbackThread->type() != IAfThreadBase::OFFLOAD) {
         return;
     }
 
