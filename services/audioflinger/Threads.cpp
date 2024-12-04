@@ -7807,6 +7807,9 @@ void DuplicatingThread::threadLoop_exit()
         audio_utils::lock_guard l(mutex());
         localTracks = std::move(mOutputTracks);
         mOutputTracks.clear();
+        for (size_t i = 0; i < localTracks.size(); ++i) {
+            localTracks[i]->destroy();
+        }
     }
     localTracks.clear();
     outputTracks.clear();
